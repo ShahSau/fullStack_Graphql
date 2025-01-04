@@ -6,7 +6,7 @@ const Authors = () => {
     const [error, setError] = useState(null)
 
     const result = useQuery(GET_ALL_AUTHORS)
-    
+
     const [setBirthyear] = useMutation(SET_BIRTHYEAR,{
         refetchQueries:[{query:GET_ALL_AUTHORS}],
         onError:(err)=>{
@@ -65,11 +65,12 @@ const Authors = () => {
             <h2 style={{marginTop:'20px'}}>Set birthyear</h2>
             <form onSubmit={onSubmit}>
             <div>
-                name 
-                <input value={formData.name}
-                 onChange={({ target }) => setFormData({ ...formData, name: target.value })}
-                 className='input'
-                />
+                <option>name</option>
+                <select value={formData.name} onChange={({ target }) => setFormData({ ...formData, name: target.value })}>
+                    {result.data.allAuthors.map(a =>
+                        <option key={a.name} value={a.name}>{a.name}</option>
+                    )}
+                </select>
             </div>
             <div>
                 born 

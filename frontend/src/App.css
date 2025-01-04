@@ -27,3 +27,9 @@ button {
   flex-wrap: wrap;
   margin: 10px;
 }
+
+select{
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
