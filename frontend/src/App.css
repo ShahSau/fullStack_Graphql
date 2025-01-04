@@ -1,0 +1,15 @@
+body{
+  font-family: 'Roboto', sans-serif;
+  margin: 20px;
+  background-color: #f5f5f5;
+}
+.tabs{
+  margin-bottom: 20px;
+}
+button {
+  margin-right: 10px; 
+  border-radius: 5px;
+}
+.active-tab {
+  border: 2px solid rgb(22, 99, 214);
+}
