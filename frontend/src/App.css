@@ -9,7 +9,21 @@ body{
 button {
   margin-right: 10px; 
   border-radius: 5px;
+  padding: 5px 10px;
 }
 .active-tab {
   border: 2px solid rgb(22, 99, 214);
+}
+
+.input{
+  margin: 10px;
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.genres{
+  display: flex;
+  flex-wrap: wrap;
+  margin: 10px;
 }
