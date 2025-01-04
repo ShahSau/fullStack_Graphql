@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import './App.css'
 import Authors from './Authors'
-
+import Books from './Books'
 
 const App = () => {
   const [activeTab, setActiveTab] = useState('authors')
@@ -25,7 +25,7 @@ const App = () => {
       </header>
       <main>
         {activeTab === 'authors' && <Authors />}
-        {activeTab === 'books' && <div>Books</div>}
+        {activeTab === 'books' && <Books />}
       </main>
     </>
   )
