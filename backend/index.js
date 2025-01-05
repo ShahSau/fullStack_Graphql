@@ -1,32 +1,24 @@
 const { ApolloServer } = require('@apollo/server')
 const { startStandaloneServer } = require('@apollo/server/standalone')
 const { v1: uuid } = require('uuid')
-let authors = [
-  {
-    name: 'Robert Martin',
-    id: "afa51ab0-344d-11e9-a414-719c6709cf3e",
-    born: 1952,
-  },
-  {
-    name: 'Martin Fowler',
-    id: "afa5b6f0-344d-11e9-a414-719c6709cf3e",
-    born: 1963
-  },
-  {
-    name: 'Fyodor Dostoevsky',
-    id: "afa5b6f1-344d-11e9-a414-719c6709cf3e",
-    born: 1821
-  },
-  { 
-    name: 'Joshua Kerievsky', // birthyear not known
-    id: "afa5b6f2-344d-11e9-a414-719c6709cf3e",
-  },
-  { 
-    name: 'Sandi Metz', // birthyear not known
-    id: "afa5b6f3-344d-11e9-a414-719c6709cf3e",
-  },
-]
+const jwt = require('jsonwebtoken')
+const AuthorSchema = require('./models/AuthorSchema')
+const BookSchema = require('./models/BookSchema')
 
+const mongoose = require('mongoose')
+mongoose.set('strictQuery', false)
+require('dotenv').config()
+
+
+const MONGODB_URI = process.env.MONGODB_URI
+
+mongoose.connect(MONGODB_URI)
+  .then(() => {
+    console.log('connected to MongoDB')
+  })
+  .catch((error) => {
+    console.log('error connection to MongoDB:', error.message)
+  })
 
 let books = [
   {
@@ -44,39 +36,39 @@ let books = [
     genres: ['agile', 'patterns', 'design']
   },
   {
-    title: 'Refactoring, edition 2',
+    title: "Refactoring, edition 2",
     published: 2018,
-    author: 'Martin Fowler',
+    author: "Martin Fowler",
     id: "afa5de00-344d-11e9-a414-719c6709cf3e",
-    genres: ['refactoring']
+    genres: ["refactoring"]
   },
   {
-    title: 'Refactoring to patterns',
+    title: "Refactoring to patterns",
     published: 2008,
-    author: 'Joshua Kerievsky',
+    author: "Joshua Kerievsky",
     id: "afa5de01-344d-11e9-a414-719c6709cf3e",
-    genres: ['refactoring', 'patterns']
+    genres: ["refactoring", "patterns"]
   },  
   {
-    title: 'Practical Object-Oriented Design, An Agile Primer Using Ruby',
+    title: "Practical Object-Oriented Design, An Agile Primer Using Ruby",
     published: 2012,
-    author: 'Sandi Metz',
+    author: "Sandi Metz",
     id: "afa5de02-344d-11e9-a414-719c6709cf3e",
-    genres: ['refactoring', 'design']
+    genres: ["refactoring", "design"]
   },
   {
-    title: 'Crime and punishment',
+    title: "Crime and punishment",
     published: 1866,
-    author: 'Fyodor Dostoevsky',
+    author: "Fyodor Dostoevsky",
     id: "afa5de03-344d-11e9-a414-719c6709cf3e",
-    genres: ['classic', 'crime']
+    genres: ["classic", "crime"]
   },
   {
-    title: 'Demons',
+    title: "Demons",
     published: 1872,
-    author: 'Fyodor Dostoevsky',
+    author: "Fyodor Dostoevsky",
     id: "afa5de04-344d-11e9-a414-719c6709cf3e",
-    genres: ['classic', 'revolution']
+    genres: ["classic", "revolution"]
   },
 ]
 
@@ -84,14 +76,13 @@ let books = [
 const typeDefs = `
     type Book{
         title: String!
-        author: String!
+        author: Author!
         published: Int!
         genres: [String!]!
     }
     
     type Author{
         name:String!
-        bookCount: Int!
         born:Int
     }
 
@@ -102,6 +93,10 @@ const typeDefs = `
             published: Int!
             genres: [String!]!
         ): Book
+        addAuthor(
+            name:String!
+            born:Int
+        ): Author
         editAuthor(
             name:String!,
             setBornTo:Int!
@@ -118,44 +113,78 @@ const typeDefs = `
 
 const resolvers = {
   Query: {
-    bookCount: () => books.length,
-    authorCount: () => authors.length,
-    allBooks: (root,args) => {
-
-        if(args.author && args.genre){
-            return books.filter(book => book.author === args.author && book.genres.includes(args.genre))
-        }
-        if(args.author){
-            return books.filter(book => book.author === args.author)
-        }
-        if(args.genre){
-            return books.filter(book => book.genres.includes(args.genre))
-        }
-        return books
+    bookCount: async () => {
+      const books = await BookSchema.find({})
+      return books.length
     },
-    allAuthors: () => authors.map(author => {
-        const bookCount = books.filter(book => book.author === author.name).length
-        return { name: author.name, bookCount, born: author.born }
-        })
+    authorCount: async () => {
+      const authors = await AuthorSchema.find({})
+      return authors.length
+    },
+    allBooks: async (root, args) => {
+      const books = await BookSchema.find({}).populate('author')
+      return books
+    },
+    allAuthors: async () => {
+      const authors = await AuthorSchema.find({})
+      return authors
+    }
   },
   Mutation:{
-    addBook:(root,args)=>{
-        const newBook = {...args,id:uuid()}
-        books = books.concat(newBook)
-        if(!authors.find(author => author.name === args.author)){
-            authors = authors.concat({name:args.author,id:uuid()})
-        }
-        return newBook
+    addBook: async (root, args) => {
+      const author = await AuthorSchema.findOne({ name: args.author })
+      if (!author) {
+        throw new GraphQLError('Author not found', {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+            invalidArgs: args.author,
+          }
+        })
+      }
+
+      const book = new BookSchema({ ...args, author: author })
+
+      try {
+        await book.save()
+      } catch (error) {
+        throw new GraphQLError('Saving book failed', {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+            invalidArgs: args.title,
+            error
+          }
+        })
+      }
+
+      return book
     },
-    editAuthor:(root,args)=>{
-        const author = authors.find(author => author.name === args.name)
-        if(!author){
-            return null
-        }
-        const updatedAuthor = {...author,born:args.setBornTo}
-        authors = authors.map(author => author.name === args.name ? updatedAuthor : author)
-        return updatedAuthor
-    }
+    // editAuthor:(root,args)=>{
+    //     const author = authors.find(author => author.name === args.name)
+    //     if(!author){
+    //         return null
+    //     }
+    //     const updatedAuthor = {...author,born:args.setBornTo}
+    //     authors = authors.map(author => author.name === args.name ? updatedAuthor : author)
+    //     return updatedAuthor
+    // },
+    addAuthor: async (root, args) => {
+      const author = new AuthorSchema({ ...args })
+
+      try {
+          await author.save()
+      } catch (error) {
+          throw new GraphQLError('Saving author failed', {
+            extensions: {
+              code: 'BAD_USER_INPUT',
+              invalidArgs: args.name,
+              error
+            }
+          })
+      }
+
+      return author
+      
+    },
   }
 
 }
