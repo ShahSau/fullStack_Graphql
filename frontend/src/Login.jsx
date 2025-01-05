@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useMutation } from '@apollo/client'
-import { LOGIN } from './queries'
+import { useMutation, useQuery } from '@apollo/client'
+import { LOGIN, ME } from './queries'
 
 const LoginForm = ({ setToken,setActiveTab }) => {
   const [username, setUsername] = useState('')
@@ -28,6 +28,7 @@ const LoginForm = ({ setToken,setActiveTab }) => {
     event.preventDefault()
 
     login({ variables: { username, password } })
+
   }
 
   return (

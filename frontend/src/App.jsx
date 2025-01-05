@@ -1,16 +1,18 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import Authors from './Authors'
 import Books from './Books'
 import AddBook from './AddBook'
 import { useApolloClient } from '@apollo/client'
 import LoginForm from './Login'
-import { GET_ALL_BOOKS } from './queries'
+import { GET_ALL_BOOKS,ME } from './queries'
 import { useQuery } from '@apollo/client'
+import Recommend from './Recommend'
 
 const App = () => {
   const [activeTab, setActiveTab] = useState('authors')
   const [token, setToken] = useState(null)
+  const [userData, setUserData] = useState(null)
   const client = useApolloClient()
 
   const logout = () => {
@@ -20,6 +22,14 @@ const App = () => {
   }
 
    const { data } = useQuery(GET_ALL_BOOKS)
+
+   const { data: user, loading:userLoading } = useQuery(ME)
+
+    useEffect(() => {
+      if (user) {
+        setUserData(user)
+      }
+    }, [user,token])
 
   return (
     <>
@@ -38,6 +48,12 @@ const App = () => {
             Books
           </button>
           {token && <button
+            onClick={() => setActiveTab('recommend')}
+            className={activeTab === 'recommend' ? 'active-tab' : ''}
+          >
+            Recommend
+          </button>}
+          {token && <button
             onClick={() => setActiveTab('add')}
             className={activeTab === 'add' ? 'active-tab' : ''}
           >
@@ -50,7 +66,9 @@ const App = () => {
         {activeTab === 'authors' && <Authors token={token}/>}
         {activeTab === 'books' && <Books book={data}/>}
         {activeTab === 'add' && <AddBook setActiveTab={setActiveTab}/>}
+        {activeTab === 'recommend' && <Recommend data={userData}/>}
         {activeTab === 'login' && <LoginForm setToken={setToken} setActiveTab={setActiveTab}/>}
+
       </main>
     </>
   )
