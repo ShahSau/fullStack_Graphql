@@ -23,7 +23,7 @@ const App = () => {
 
    const { data } = useQuery(GET_ALL_BOOKS)
 
-   const { data: user, loading:userLoading } = useQuery(ME)
+   const { data: user } = useQuery(ME)
 
     useEffect(() => {
       if (user) {

@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import  {useState} from 'react'
 import { GET_ALL_BOOKS, CREATE_BOOK } from './queries'
 import { useMutation } from '@apollo/client'
 import './App.css'
@@ -21,13 +21,23 @@ const AddBook = ({setActiveTab}) => {
     }
 
     const [ createBook ] = useMutation(CREATE_BOOK,{
-        refetchQueries:[{query:GET_ALL_BOOKS}],
+        // refetchQueries:[{query:GET_ALL_BOOKS}],
         onError:(err)=>{
             const msg = err.graphQLErrors.map(e=>e.message).join('\n')
             setError(msg)
             setTimeout(() => {
                 setError(null)
               }, 5000)
+        },
+        update: (store, response) => {
+            const dataInStore = store.readQuery({query: GET_ALL_BOOKS})
+            store.writeQuery({
+                query: GET_ALL_BOOKS,
+                data: {
+                    ...dataInStore,
+                    allBooks: [...dataInStore.allBooks, response.data.addBook]
+                }
+            })
         }
     })
 

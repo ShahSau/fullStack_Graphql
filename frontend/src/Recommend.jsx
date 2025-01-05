@@ -2,7 +2,6 @@ import { useQuery } from '@apollo/client'
 import { GET_ALL_BOOKS } from './queries'
 
 const Recommend = ({data}) => {
-
     const { data: booksData, loading: booksLoading } = useQuery(GET_ALL_BOOKS, {
         variables: { genre: data.me.favoriteGenre }
     })
@@ -11,12 +10,11 @@ const Recommend = ({data}) => {
         return <div>Loading...</div>
     }
 
-    
 
   return (
     <div>
-            <h2>Recommendations</h2>
-            <table>
+        <h2>Recommendations</h2>
+        <table>
                 <tbody>
                     <tr>
                         <th></th>
@@ -35,7 +33,7 @@ const Recommend = ({data}) => {
                         </tr>
                     )}
                 </tbody>
-            </table>
+        </table>
     </div>
   )
 }
