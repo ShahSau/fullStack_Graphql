@@ -2,7 +2,7 @@ import { useQuery, useMutation } from '@apollo/client'
 import { GET_ALL_AUTHORS,SET_BIRTHYEAR } from './queries'
 import { useState } from 'react'
 
-const Authors = () => {
+const Authors = ({token}) => {
     const [error, setError] = useState(null)
 
     const result = useQuery(GET_ALL_AUTHORS)
@@ -19,7 +19,7 @@ const Authors = () => {
     })
 
     const [formData, setFormData] = useState({
-        name: '',
+        name: 'Robert Martin',
         born: ''
     })
 
@@ -29,11 +29,11 @@ const Authors = () => {
 
 
 
-    const onSubmit = (event) => {
+    const onSubmit =async (event) => {
         event.preventDefault()
         setBirthyear({ variables: { name: formData.name, born: parseInt(formData.born) } })
         setFormData({
-            name: '',
+            name: 'Robert Martin',
             born: ''
         })
     }
@@ -62,6 +62,7 @@ const Authors = () => {
                 </tbody>
             </table>
             {error && <div style={{color:'red', marginBottom:'10px'}}>{error}</div>}
+            {token && <>
             <h2 style={{marginTop:'20px'}}>Set birthyear</h2>
             <form onSubmit={onSubmit}>
             <div>
@@ -81,6 +82,7 @@ const Authors = () => {
             </div>
             <button type='submit'>update author</button>
             </form>
+            </>}
         </div>
     )
 }

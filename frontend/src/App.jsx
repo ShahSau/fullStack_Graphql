@@ -3,9 +3,20 @@ import './App.css'
 import Authors from './Authors'
 import Books from './Books'
 import AddBook from './AddBook'
+import { useApolloClient } from '@apollo/client'
+import LoginForm from './Login'
 
 const App = () => {
   const [activeTab, setActiveTab] = useState('authors')
+  const [token, setToken] = useState(null)
+  const client = useApolloClient()
+
+  const logout = () => {
+    setToken(null)
+    localStorage.clear()
+    client.resetStore()
+  }
+
   return (
     <>
       <header>
@@ -22,18 +33,20 @@ const App = () => {
           >
             Books
           </button>
-          <button
+          {token && <button
             onClick={() => setActiveTab('add')}
             className={activeTab === 'add' ? 'active-tab' : ''}
           >
             Add Book
-          </button>
+          </button>}
+          {token ? <button onClick={logout}>Logout</button> : <button onClick={() => setActiveTab('login')}>Login</button>}
         </nav>
       </header>
       <main>
-        {activeTab === 'authors' && <Authors />}
+        {activeTab === 'authors' && <Authors token={token}/>}
         {activeTab === 'books' && <Books />}
-        {activeTab === 'add' && <AddBook />}
+        {activeTab === 'add' && <AddBook setActiveTab={setActiveTab}/>}
+        {activeTab === 'login' && <LoginForm setToken={setToken} setActiveTab={setActiveTab}/>}
       </main>
     </>
   )

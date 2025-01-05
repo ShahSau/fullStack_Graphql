@@ -3,7 +3,7 @@ import { GET_ALL_BOOKS, CREATE_BOOK } from './queries'
 import { useMutation } from '@apollo/client'
 import './App.css'
 
-const AddBook = () => {
+const AddBook = ({setActiveTab}) => {
     const [formData, setFormData] = useState({
         title: '',
         author: '',
@@ -32,7 +32,7 @@ const AddBook = () => {
     })
 
 
-    const submit = (event) => {
+    const submit = async (event) => {
         event.preventDefault()
         createBook({variables: {title: formData.title, author: formData.author, published: parseInt(formData.published), genres: formData.genres}})
         setFormData({
@@ -41,6 +41,7 @@ const AddBook = () => {
             published: '',
             genres:[]
         })
+        setActiveTab('books')
             
     }
 
