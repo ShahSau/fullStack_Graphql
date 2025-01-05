@@ -5,6 +5,8 @@ import Books from './Books'
 import AddBook from './AddBook'
 import { useApolloClient } from '@apollo/client'
 import LoginForm from './Login'
+import { GET_ALL_BOOKS } from './queries'
+import { useQuery } from '@apollo/client'
 
 const App = () => {
   const [activeTab, setActiveTab] = useState('authors')
@@ -16,6 +18,8 @@ const App = () => {
     localStorage.clear()
     client.resetStore()
   }
+
+   const { data } = useQuery(GET_ALL_BOOKS)
 
   return (
     <>
@@ -44,7 +48,7 @@ const App = () => {
       </header>
       <main>
         {activeTab === 'authors' && <Authors token={token}/>}
-        {activeTab === 'books' && <Books />}
+        {activeTab === 'books' && <Books book={data}/>}
         {activeTab === 'add' && <AddBook setActiveTab={setActiveTab}/>}
         {activeTab === 'login' && <LoginForm setToken={setToken} setActiveTab={setActiveTab}/>}
       </main>
